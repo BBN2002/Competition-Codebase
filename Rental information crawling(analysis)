@@ -1,296 +1,246 @@
+# The library needed to crawl data
+import time
+import requests
+import re
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.model_selection import train_test_split
-from catboost import CatBoostRegressor
-import sklearn.metrics as metrics
-from datetime import datetime
-import numpy as np
-from sklearn.model_selection import KFold
-import torch
-from sqlalchemy import create_engine
-
-# Database connection configuration
-db_config = {
-    'host': '123.57.92.58',
-    'port': 3306,
-    'user': '租房数据',
-    'password': 'Kingho325',
-    'database': '租房数据',
-    'charset': 'utf8'
-}
-
-# Create a database connection string
-db_url = f"mysql+mysqlconnector://{db_config['user']}:{db_config['password']}@{db_config['host']}:{db_config['port']}/{db_config['database']}"
-
-# Connect to the MySQL database
-engine = create_engine(db_url)
-query = "SELECT * FROM rental_data_analysis"
-data = pd.read_sql(query, engine)
-
-# Print the first few lines of the data box
-print(data.head())
-
-# Delete the lines "Please Contact" in Price and "Not Available" in Size(sqft)
-data = data[(data['Price'] != 'Please Contact') & (data['Size_sqft'] != 'Not Available')]
+from lxml import etree
+from multiprocessing import Pool
+import pymysql
 
 
-# Change the type of Price, Bedroom, Bathroom, Parking Included, Size(sqft) to float64
-data['Price'] = data['Price'].replace('[\$,]', '', regex=True).astype(float)
-data = data[(data['Bedroom'] != 'Studio')]
-data['Bedroom'] = data['Bedroom'].replace('5+', '5').astype(float)
-data['Type'] = data['Type'].replace('Apartments', 'Apartment')
-data['Bathroom'] = data['Bathroom'].astype(float)
-data['Parking_Included'] = data['Parking_Included'].replace('3+', '3').astype(float)
-data['Size_sqft'] = data['Size_sqft'].replace('[\$,]', '', regex=True).astype(float)
+# Crawling data programs
+def DingDianSpider(url):
+    # Set up an empty list to store dictionaries of each rental information later
+    count = list()
 
-today = datetime.now()
-data['Move_In_Date'] = pd.to_datetime(data['Move_In_Date'], format='%B %d, %Y', errors='coerce')
-data['Move_In_Date'] = data['Move_In_Date'].replace('Unknown', today)
-# Calculate the number of days from today
-data['Move_In_Date'] = (data['Move_In_Date'] - today).dt.days.astype(float)
+    # Get the main page of the rental site and convert
+    headers = {
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0'}
+    response = requests.get(url=url, headers=headers).text
+    tree = etree.HTML(response)
 
-# Pandas Tools view data
-print(data.head())
-
-# Statistics of missing data values
-print(data.info())
-
-# descriptive statistical analysis
-data_desc = data[
-    ['Latitude', 'Longitude', 'Type', 'Bedroom', 'Bathroom', 'Utilities_Included', 'Wi_Fi_and_More', 'Parking_Included', 'Agreement_Type',
-     'Move_In_Date','Pet_Friendly', 'Size_sqft', 'Furnished', 'Appliances', 'Air_Conditioning',
-     'Personal_Outdoor_Space', 'Smoking_Permitted']]
-data_desc.to_excel('data.xlsx', index=False)
-print(data_desc.describe())
-
-# Price Feature distribution analysis
-plt.rcParams['font.sans-serif'] = ['SimHei']  # Specify default font
-plt.rcParams['axes.unicode_minus'] = False  # Fixed an issue where the save image is displayed as a square with the negative sign '-'
-data['Price'].value_counts().plot(kind='bar', figsize=[5, 3])
-plt.title("Price Feature bar chart")
-print(data['Price'].value_counts())
-plt.show()
-
-# Size_sqft Feature distribution analysis
-plt.rcParams['font.sans-serif'] = ['SimHei']  # Specify default font
-plt.rcParams['axes.unicode_minus'] = False  # Fixed an issue where the save image is displayed as a square with the negative sign '-'
-data['Size_sqft'].value_counts().plot(kind='bar', figsize=[5, 3])
-plt.title("Size_sqft Feature bar chart")
-print(data['Size_sqft'].value_counts())
-plt.show()
-
-# correlation analysis
-df_tmp1 = data[
-    ['Price', 'Bedroom', 'Bathroom', 'Parking_Included', 'Size_sqft']]
-plt.rcParams['font.sans-serif'] = ['SimHei']  # Specify default font
-plt.rcParams['axes.unicode_minus'] = False  # Fixed an issue where the save image is displayed as a square with the negative sign '-'
-sns.heatmap(df_tmp1.corr(), cmap="YlGnBu", annot=True)
-plt.show()
-
-# The correlation of variables is shown
-sns.pairplot(data[['Price', 'Size_sqft']])
-plt.show()
-
-# Plot a histogram of the Price variable
-plt.hist(x=data['Price'],  # Assigned plot data
-         bins=50,  # Specifies the number of bars in the histogram to be 50
-         color='steelblue',
-         edgecolor='black',  #
-         )
-
-plt.title('Price histogram')
-plt.xlabel('Price')
-plt.ylabel('quantity')
-# Show Graph
-plt.show()
-
-
-# Create feature data and label data
-X = data[
-    ['Latitude', 'Longitude', 'Type', 'Bedroom', 'Bathroom', 'Utilities_Included', 'Wi_Fi_and_More', 'Parking_Included', 'Agreement_Type',
-     'Move_In_Date','Pet_Friendly', 'Size_sqft', 'Furnished', 'Appliances', 'Air_Conditioning',
-     'Personal_Outdoor_Space', 'Smoking_Permitted']]
-y = data['Price']
-
-categorical_features_indices = np.where(X.dtypes != float)[0]
-
-# Define k-fold cross-validation
-k_folds = 5
-kf = KFold(n_splits=k_folds, shuffle=True, random_state=5)
-
-# Initializes the list to store training and validation loss values for each fold
-train_losses = []
-val_losses = []
-
-# Initializes the list to store the predictions for each fold
-all_y_test = []
-all_y_pred = []
-
-# Data set splitting
-x_data, x_test, y_data, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Perform K-fold cross-validation
-for train_index, test_index in kf.split(x_data):
-    X_train, X_val = X.iloc[train_index], X.iloc[test_index]
-    y_train, y_val = y.iloc[train_index], y.iloc[test_index]
-
-    model = CatBoostRegressor(iterations=500,  # iterations
-                               learning_rate=0.13,  # learning rate
-                               depth=11,  # Depth of Tree
-                               loss_function='RMSE',  # loss function
-                               eval_metric='RMSE',  # evaluation index
-                               random_seed=99,  # Seed
-                               od_type='Iter',  # Type of overfitting detection
-                               od_wait=20,  # The number of iterations that continue after the optimization goal is reached
-                               verbose=False)  # Training process information is not displayed
-
-    model.fit(X_train, y_train, eval_set=(X_val, y_val), use_best_model=True, cat_features=categorical_features_indices)
-
-    # Record the loss value for each training cycle
-    train_loss = model.evals_result_['learn']['RMSE']
-    val_loss = model.evals_result_['validation']['RMSE']
-    train_losses.append(train_loss)
-    val_losses.append(val_loss)
-
-    # Make predictions on the test set and record the results
-    y_pred = model.predict(x_test)
-    all_y_test.extend(y_test)
-    all_y_pred.extend(y_pred)
-
-# Visual loss value
-plt.figure(figsize=(10, 5))
-for i in range(k_folds):
-    plt.plot(train_losses[i], label=f'Fold {i+1} Train Loss')
-    plt.plot(val_losses[i], label=f'Fold {i+1} Validation Loss')
-
-plt.xlabel('Iterations')
-plt.ylabel('RMSE')
-plt.title('Training and Validation Losses in each Fold')
-plt.legend()
-plt.show()
-
-# model evaluation
-print('Interpretable variance value：{}'.format(round(metrics.explained_variance_score(all_y_test, all_y_pred), 2)))
-print('mean absolute error：{}'.format(round(metrics.mean_absolute_error(all_y_test, all_y_pred), 2)))
-print('error of mean square：{}'.format(round(metrics.mean_squared_error(all_y_test, all_y_pred), 2)))
-print('r-value method：{}'.format(round(metrics.r2_score(all_y_test, all_y_pred), 2)))
-
-# Comparison graph between true value and predicted value
-plt.plot(range(len(all_y_test)), all_y_test, color="green", linewidth=1.5, linestyle="-")
-plt.plot(range(len(all_y_pred)), all_y_pred, color="red", linewidth=1.5, linestyle="-.")
-plt.legend(['true value', 'predicted value'])
-plt.title("Comparison graph between true value and predicted value")
-plt.show()  # display picture
-
-feature_importance = model.get_feature_importance(type='FeatureImportance')
-
-# Get feature name
-feature_names = model.feature_names_
-
-# Visual feature importance
-sorted_idx = np.argsort(feature_importance)
-plt.figure(figsize=(10, 8))
-plt.barh(range(len(sorted_idx)), feature_importance[sorted_idx], align='center')
-plt.yticks(range(len(sorted_idx)), np.array(feature_names)[sorted_idx])
-plt.xlabel('Feature Importance')
-plt.title('CatBoost Feature Importance')
-plt.show()
-
-# Conservation of resources model
-torch.save(model, "full_model.pt")
-
-# loading model
-model_loaded = torch.load("full_model.pt")
-
-# Test whether client input and prediction are possible
-def predict_price():
-    # Receive user input feature parameters
-    # User input feature value
-
-    global latitude, longitude, move_in_date, air_conditioning, personal_outdoor_space, smoking_permitted, utilities_included, wi_fi_and_more, parking_included, agreement_type, pet_friendly, size_sqft, furnished, post_time, Type, bedroom, bathroom, appliances
+    i = 0
     try:
-        latitude = float(input("Enter Latitude: "))
-        longitude = float(input("Enter Longitude: "))
-        Type = input(
-            "Enter the Type of home ('Apartment' or 'House' or 'Condo' or 'Duplex/Triplex' or 'Basement' or 'Townhouse'): ")
-        bedroom = float(input("Enter the number of bedrooms: "))
-        bathroom = float(input("Enter the number of bathrooms: "))
+        while i <= 39:
+            try:
+                # Get the information and links of each rental label on the main page
+                li_List = tree.xpath("//*[@class='sc-63c588db-0 fEeWHy']/div[3]/ul/li")[i]
+                title = li_List.xpath('./section/div/div/div/h3/a/text()')
+                # print(f'Title: {title}')
+                price = li_List.xpath('./section/div/div/div/div/p/text()')
+                p = price[0].replace('$', '')
 
-        # Question by question
-        hydro = input("Is hydro included? (Yes/No): ").capitalize()
-        heat = input("Is heat included? (Yes/No): ").capitalize()
-        water = input("Is water included? (Yes/No): ").capitalize()
-        # Converts user input into a specified format
-        utilities_included = ", ".join([f"Yes: {hydro}" if hydro == 'Yes' else "No: Hydro",
-                                        f"Yes: {heat}" if heat == 'Yes' else "No: Heat",
-                                        f"Yes: {water}" if water == 'Yes' else "No: Water"])
+                link = li_List.xpath('./section/div/div[2]/div/h3/a/@href')[0]
 
-        wi_fi_and_more = input(
-            "Enter Wi-Fi and more ('Not included' or 'Internet' or 'Cable / TV, Internet'): ")
-        parking_included = int(input("Enter parking included (3+ all imputed as 3, range is 0-3): "))
-        agreement_type = input("Enter agreement type ('1 Year' or 'Month-to-month' or 'Not Available'): ")
-        pet_friendly = input("Enter pet friendly ('No' or 'Yes' or 'Limited'): ")
-        move_in_date = input("Enter the number of days until the delivery date (If you don't know, enter 'NaN'): ")
-        size_sqft = float(input("Enter size in square feet: "))
-        furnished = input("Enter furnished ('No' or 'Yes'): ")
+                # Go into the Properties label page for more detailed information
+                next_url = f'https://www.kijiji.ca{link}'
+                headers = {
+                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0'}
+                next_response = requests.get(url=next_url, headers=headers).text
+                next_tree = etree.HTML(next_response)
 
-        laundry_in_unit = input("Is 'Laundry (In Unit)' included? (Yes/No): ").lower()
-        laundry_in_building = input("Is 'Laundry (In Building)' included? (Yes/No): ").lower()
-        dishwasher = input("Is 'Dishwasher' included? (Yes/No): ").lower()
-        # Check the user's input to determine the output string
-        if laundry_in_unit == 'yes' and laundry_in_building == 'no' and dishwasher == 'no':
-            appliances = 'Laundry (In Unit)'
-        elif laundry_in_unit == 'no' and laundry_in_building == 'yes' and dishwasher == 'no':
-            appliances = 'Laundry (In Building)'
-        elif laundry_in_unit == 'no' and laundry_in_building == 'no' and dishwasher == 'yes':
-            appliances = 'Dishwasher'
-        elif laundry_in_unit == 'yes' and laundry_in_building == 'yes' and dishwasher == 'no':
-            appliances = 'Laundry (In Unit), Laundry (In Building)'
-        elif laundry_in_unit == 'yes' and laundry_in_building == 'no' and dishwasher == 'yes':
-            appliances = 'Laundry (In Unit), Dishwasher'
-        elif laundry_in_unit == 'no' and laundry_in_building == 'yes' and dishwasher == 'yes':
-            appliances = 'Laundry (In Building), Dishwasher'
-        elif laundry_in_unit == 'yes' and laundry_in_building == 'yes' and dishwasher == 'yes':
-            appliances = 'Laundry (In Unit), Laundry (In Building), Dishwasher'
-        else:
-            appliances = 'Not included'
+                map_url = f"{next_url}#map"
 
-        air_conditioning = input("Enter air conditioning ('No' or 'Yes'): ")
-        personal_outdoor_space = input("Enter personal outdoor space ('Balcony' or 'Yard' or 'Yard Balcony' or 'Not included'): ")
-        smoking_permitted = input("Enter smoking permitted ('No' or 'Yes' or 'Outdoors only'): ")
-    except ValueError:
-        print("The entered data format is incorrect. Please try again.")
-        exit()
+                headers = {
+                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0'}
+                map_response = requests.get(url=map_url, headers=headers).text
+                map_tree = etree.HTML(map_response)
 
-    # Construct feature vector
-    input_data = {
-        'Latitude': latitude,
-        'Longitude': longitude,
-        'Type': Type,
-        'Bedroom': bedroom,
-        'Bathroom': bathroom,
-        'Utilities_Included': utilities_included,
-        'Wi_Fi_and_More': wi_fi_and_more,
-        'Parking_Included': parking_included,
-        'Agreement_Type': agreement_type,
-        'Move_In_Date': move_in_date,
-        'Pet_Friendly': pet_friendly,
-        'Size_sqft': size_sqft,
-        'Furnished': furnished,
-        'Appliances': appliances,
-        'Air_Conditioning': air_conditioning,
-        'Personal_Outdoor_Space': personal_outdoor_space,
-        'Smoking_Permitted': smoking_permitted
+                # Parse the website and transform the data
+                latitude = map_tree.xpath('//*[@property="og:latitude"]/@content')
+
+                longitude = map_tree.xpath('//*[@property="og:longitude"]/@content')
+
+                # Detailed information
+                Type1 = next_tree.xpath('//*[@id="vip-body"]/div[2]/div[3]/div[1]/li[1]/span/text()')
+
+                Time = next_tree.xpath('//*[@id="vip-body"]/div[2]/div[2]/div[2]/time/text()')
+                if Time != []:
+                    pass
+                else:
+                    Time = ["Over a month ago"]
+
+                location = next_tree.xpath('//*[@id="vip-body"]/div[2]/div[2]/div[1]/span/text()')
+
+                bedroom = next_tree.xpath('//*[@id="vip-body"]/div[2]/div[3]/div[1]/li[2]/span/text()')
+                x = bedroom[0]
+                b1 = x.replace('Bedrooms: ', '')
+                if "Den" in b1:
+                    b1 = b1.replace(" + Den", '')
+                    b1 = int(b1) + 0.5
+                    b1 = str(b1)
+                if b1 == 'Bachelor/Studio':
+                    b1 = '0'
+
+                bathroom = next_tree.xpath('//*[@id="vip-body"]/div[2]/div[3]/div[1]/li[3]/span/text()')
+                y = bathroom[0]
+                b2 = y.replace('Bathrooms: ', '')
+
+                Utilities_Included = next_tree.xpath(
+                    '//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[1]/ul/li/div/ul/li/svg/@aria-label')
+                if Utilities_Included != []:
+                    pass
+                else:
+                    Utilities_Included = ["Not included"]
+
+                Wi_Fi = next_tree.xpath('//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[1]/ul/li[2]/div/ul/text()')
+                if Wi_Fi == []:
+                    Wi_Fi = next_tree.xpath(
+                        '//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[1]/ul/li[2]/div/ul/li/text()')
+                else:
+                    Wi_Fi = ["Not included"]
+
+                Parking_Included = next_tree.xpath(
+                    '//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[1]/ul/li[3]/dl/dd/text()')
+
+                Agreement_Type = next_tree.xpath(
+                    '//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[1]/ul/li[4]/dl/dd/text()')
+
+                Move_In_Date = next_tree.xpath(
+                    '//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[1]/ul/li[5]/dl/dd/span/text()')
+                if Move_In_Date == []:
+                    Move_In_Date = ["Unknown"]
+
+                    Pet_Friendly = next_tree.xpath(
+                        '//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[1]/ul/li[5]/dl/dd/text()')
+                else:
+                    Pet_Friendly = next_tree.xpath(
+                        '//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[1]/ul/li[6]/dl/dd/text()')
+
+                Size = next_tree.xpath('//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[2]/ul/li[1]/dl/dd/text()')
+
+                Furnished = next_tree.xpath(
+                    '//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[2]/ul/li[2]/dl/dd/text()')
+
+                appliance1 = next_tree.xpath(
+                    f'//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[2]/ul/li[3]/div/ul/li[1]/text()')
+                appliance2 = next_tree.xpath(
+                    f'//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[2]/ul/li[3]/div/ul/li[2]/text()')
+                appliance3 = next_tree.xpath(
+                    f'//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[2]/ul/li[3]/div/ul/li[3]/text()')
+
+                Appliances = []
+                Appliances = Appliances + appliance1 + appliance2 + appliance3
+                if Appliances != []:
+                    pass
+                else:
+                    Appliances = ["Not included"]
+
+                Air_conditioning = next_tree.xpath(
+                    '//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[2]/ul/li[4]/dl/dd/text()')
+
+                Outdoor_space = next_tree.xpath(
+                    '//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[2]/ul/li[5]/div/ul/li/text()')
+                if Outdoor_space != []:
+                    pass
+                else:
+                    Outdoor_space = ["Not included"]
+
+                Smoking = next_tree.xpath(
+                    '//*[@id="vip-body"]/div[3]/div[2]/div[1]/div[1]/div[2]/ul/li[6]/dl/dd/text()')
+
+                if price[0] == 'Please Contact' or Size[0] == 'Not Available':
+                    price_per_sqft = 'Please Contact'
+                else:
+                    compute_price = re.findall("\d*", price[0])
+                    b = "".join(compute_price)
+                    compute_size = re.findall("\d*", Size[0])
+                    c = "".join(compute_size)
+                    price_per_sqft = f"{float(float(b) / float(c) / 100)}"
+
+                if Size[0] != '1' and price_per_sqft != 'Please Contact':
+                # Store rental information in dictionary
+                    dic = {"Title": title[0], "Website": next_url, "Price": p, "Price per square foot": price_per_sqft,
+                           "Type": Type1[0], "Post Time": Time[0], "Location": location[0], "Latitude": latitude[0],
+                           "Longitude": longitude[0], "Bedroom": b1, "Bathroom": b2,
+                           "Utilities Included": (", ".join(Utilities_Included)),
+                           "Wi Fi and More": (", ".join(Wi_Fi)), "Parking Included": Parking_Included[0],
+                           "Agreement Type": Agreement_Type[0], "Move In Date": Move_In_Date[0],
+                           "Pet Friendly": Pet_Friendly[0],
+                           "Size(sqft)": Size[0], "Furnished": (", ".join(Furnished)),
+                           "Appliances": (", ".join(Appliances)), "Air Conditioning": Air_conditioning[0],
+                           "Personal Outdoor Space": (" ".join(Outdoor_space)), "Smoking Permitted": Smoking[0]}
+
+                    count.append(dic)
+            except Exception:
+                print(" ")
+            i = i + 1
+    except Exception:
+        print("That's all")
+    return count
+
+
+# Set up parallel processing to improve crawling speed, and convert data to Dataframe format and export to Excel
+
+if __name__ == '__main__':
+    urls = [f'https://www.kijiji.ca/b-apartments-condos/halifax/page-{a}/c37l80010' for a in range(1, 20)]
+    pool = Pool(processes=20)
+    results = pool.map(DingDianSpider, urls)
+    pool.close()
+    pool.join()
+    flattened_results = [item for sublist in results for item in sublist]
+    data = pd.DataFrame(flattened_results)
+    # data.to_excel('Canada Rental House.xlsx', index=False)
+    db_config = {
+        'host': '127.0.0.1',
+        'port': 3306,
+        'user': 'root',
+        'password': 'Kingho325',
+        'db': '租房数据',
+        'charset': 'utf8'
     }
 
-    # Price forecasting
-    X = pd.DataFrame(input_data, index=[0])
-    predicted_price = model_loaded.predict(X)
+    try:
+        conn = pymysql.connect(**db_config)
+        cursor = conn.cursor()
 
-    return predicted_price
+        # Create a table to store rental data
+        create_table_query = '''CREATE TABLE IF NOT EXISTS rental_data_analysis
+                     (Title VARCHAR(255), Website VARCHAR(255), Price TEXT, Price_per_square_foot TEXT, Type TEXT, Post_Time TEXT, Location TEXT, Latitude TEXT, Longitude TEXT,
+                      Bedroom TEXT, Bathroom TEXT, Utilities_Included TEXT, Wi_Fi_and_More TEXT, Parking_Included TEXT, Agreement_Type TEXT,
+                      Move_In_Date TEXT, Pet_Friendly TEXT, Size_sqft TEXT, Furnished TEXT, Appliances TEXT, Air_Conditioning TEXT,
+                      Personal_Outdoor_Space TEXT, Smoking_Permitted TEXT,
+                      UNIQUE KEY (Title(255), Website(255)))'''
 
+        cursor.execute(create_table_query)
+        conn.commit()
 
-# Call the function for price prediction
-predicted_price = predict_price()
-print("Predicted price:", predicted_price)
+        # Insert data into the database with handling duplicates
+        insert_query = '''INSERT INTO rental_data_analysis (Title, Website, Price, Price_per_square_foot, Type, Post_Time, Location, Latitude, Longitude, 
+                                    Bedroom, Bathroom, Utilities_Included, Wi_Fi_and_More, Parking_Included, Agreement_Type, Move_In_Date, Pet_Friendly, 
+                                    Size_sqft, Furnished, Appliances, Air_Conditioning, Personal_Outdoor_Space, Smoking_Permitted) 
+                                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                    ON DUPLICATE KEY UPDATE
+                                    Title = VALUES(Title), Price = VALUES(Price), Price_per_square_foot = VALUES(Price_per_square_foot), Type = VALUES(Type),
+                                    Post_Time = VALUES(Post_Time), Location = VALUES(Location), Latitude = VALUES(Latitude), Longitude = VALUES(Longitude),
+                                    Bedroom = VALUES(Bedroom), Bathroom = VALUES(Bathroom), Utilities_Included = VALUES(Utilities_Included),
+                                    Wi_Fi_and_More = VALUES(Wi_Fi_and_More), Parking_Included = VALUES(Parking_Included), Agreement_Type = VALUES(Agreement_Type),
+                                    Move_In_Date = VALUES(Move_In_Date), Pet_Friendly = VALUES(Pet_Friendly), Size_sqft = VALUES(Size_sqft), Furnished = VALUES(Furnished),
+                                    Appliances = VALUES(Appliances), Air_Conditioning = VALUES(Air_Conditioning), Personal_Outdoor_Space = VALUES(Personal_Outdoor_Space),
+                                    Smoking_Permitted = VALUES(Smoking_Permitted)'''
+
+        for item in flattened_results:
+            cursor.execute(insert_query, (
+                item['Title'], item['Website'], item['Price'], item['Price per square foot'], item['Type'],
+                item['Post Time'],
+                item['Location'], item['Latitude'], item['Longitude'], item['Bedroom'], item['Bathroom'],
+                item['Utilities Included'],
+                item['Wi Fi and More'], item['Parking Included'], item['Agreement Type'], item['Move In Date'],
+                item['Pet Friendly'],
+                item['Size(sqft)'], item['Furnished'], item['Appliances'], item['Air Conditioning'],
+                item['Personal Outdoor Space'],
+                item['Smoking Permitted']))
+
+        conn.commit()
+        print("Data inserted successfully.")
+        # Set the scheduled tasks
+        delay = 43200
+        time.sleep(delay)
+        print('Next')
+
+    except pymysql.Error as e:
+        print("Error inserting data into MySQL table:", e)
+
+    finally:
+        if conn:
+            conn.close()
