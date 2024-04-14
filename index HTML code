@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>为竞赛而生</title>
+  <style>
+    .hidden {
+        display: none;
+    }
+</style>
+<style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      border-bottom: 2px solid #000;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      background-color: #000;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      margin-right: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #333;
+    }
+
+    .tableauPlaceholder {
+      position: relative;
+      margin-bottom: 30px;
+    }
+
+    .list {
+      margin-top: 20px;
+    }
+
+    .list li {
+      border: 1px solid #333;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+    }
+    
+    .list li1 {
+      border: 1px solid #333;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+    }
+
+    .list li a {
+      color: #000;
+      text-decoration: none;
+    }
+    .hidden {
+      display: none;
+    }
+     .analysis-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: 30px;
+  }
+
+  .analysis-section img {
+    width: 80%; 
+    border: 1px solid #333; 
+    margin-bottom: 15px;
+  }
+
+  .analysis-section p {
+    width: 80%;
+    border: 1px solid #333; 
+    padding: 10px; 
+    margin-bottom: 30px; 
+  }
+#a {
+    background-color: #000; 
+    color: #fff; 
+    padding: 20px; 
+    top: 0;
+    left: 0;
+    width: 100%; 
+    z-index: 1000;
+    margin-top: 0;
+}
+
+
+body {
+    margin: 0; 
+    padding: 0; 
+}
+
+#b {
+    background-color: #000; 
+    color: #fff; 
+    padding: 20px; 
+    position: relative;
+    bottom: 0; 
+    left: 0; 
+    width: 100%; 
+    z-index: 1000; 
+    margin-bottom: 0;
+    text-align: center;
+}
+  </style>
+</head>
+<body>  
+  <h1 id='a'>Halifax Rental Housing and Price Prediction Platform</h1>
+  <div class='tableauPlaceholder' id='viz1712912415024' style='position: relative'><noscript>< img alt='工作表 1 ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;_1&#47;_17129123360200&#47;1&#47;1_rss.png' style='border: none' /></noscript><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='site_root' value='' /><param name='name' value='_17129123360200&#47;1' /><param name='tabs' value='no' /><param name='toolbar' value='yes' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;_1&#47;_17129123360200&#47;1&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='yes' /><param name='language' value='zh-CN' /><param name='filter' value='publish=yes' /></object></div>                <script type='text/javascript'>                    var divElement = document.getElementById('viz1712912415024');                    var vizElement = divElement.getElementsByTagName('object')[0];                    vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*0.75)+'px';                    var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                </script>
+  <div class='tableauPlaceholder' id='viz1712912724759' style='position: relative'><noscript>< img alt='Rental Houses in Halifax ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;ha&#47;halifax2_0&#47;_4_11&#47;1_rss.png' style='border: none' /></noscript><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='site_root' value='' /><param name='name' value='halifax2_0&#47;_4_11' /><param name='tabs' value='no' /><param name='toolbar' value='yes' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;ha&#47;halifax2_0&#47;_4_11&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='yes' /><param name='language' value='zh-CN' /><param name='filter' value='publish=yes' /></object></div>                <script type='text/javascript'>                    var divElement = document.getElementById('viz1712912724759');                    var vizElement = divElement.getElementsByTagName('object')[0];                    vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*0.75)+'px';                    var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                </script>
+   <button onclick="toggleTableau()">Change Houses Type</button>
+  <h2>Type of Houses</h2>
+    <button onclick="showList1()">Houses on Construction</button>
+    <button onclick="showList2()">Houses for Rental</button>
+    <span><div id="apartment-list" class="list"> </div>      
+      <button id="prevBtn">Prev</button>
+      <button id="nextBtn">Next</button></span>
+
+    <span><div id="apartment-list1" class="list hidden"></div>
+      <button id="prevBtnr" class="button hidden">Prev</button>
+      <button id="nextBtnr" class="button hidden">Next</button></span>
+
+    <script>
+     let tableau1Visible = true; 
+
+  
+    function toggleTableau() {
+      const tableau1 = document.getElementById('viz1712912415024');
+      const tableau2 = document.getElementById('viz1712912724759');
+
+      if (tableau1Visible) {
+        tableau1.style.display = 'none';
+        tableau2.style.display = 'block';
+        tableau1Visible = false;
+      } else {
+        tableau1.style.display = 'block';
+        tableau2.style.display = 'none';
+        tableau1Visible = true;
+      }
+    }
+   window.addEventListener('load', async()=> {
+        setTimeout(() => {
+            toggleTableau();
+        }, 1000); 
+    });
+        function downloadExcel() {
+           
+            var url = 'https://www.ksjzs.com:5003/download_excel';
+
+           
+            var iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = url;
+            document.body.appendChild(iframe);
+
+        
+            setTimeout(function() {
+                document.body.removeChild(iframe);
+            }, 5000);
+        }
+    </script>
+     <script>
+         function downloadExcel1() {
+          
+             var url = 'https://www.ksjzs.com:5002/download_excel';
+ 
+          
+             var iframe1 = document.createElement('iframe');
+             iframe1.style.display = 'none';
+             iframe1.src = url;
+             document.body.appendChild(iframe1);
+ 
+            
+             setTimeout(function() {
+                 document.body.removeChild(iframe1);
+             }, 5000);
+         }
+     </script>
+    </div></div></span>
+
+    <script>
+    
+        function showList1() {
+            var list1 = document.getElementById("apartment-list");
+            var list2 = document.getElementById("apartment-list1");
+            var button1 = document.getElementById("prevBtn")
+            var button2 = document.getElementById("nextBtn")
+            var button1r = document.getElementById("prevBtnr")
+            var button2r = document.getElementById("prevBtnr")
+            list1.classList.remove("hidden");
+            button1.classList.remove("hidden")
+            button2.classList.remove("hidden")
+            list2.classList.add("hidden");
+            button1r.classList.add("hidden")
+            button2r.classList.add("hidden")
+        }
+        function showList2() {
+          var list1 = document.getElementById("apartment-list");
+            var list2 = document.getElementById("apartment-list1");
+            var button1 = document.getElementById("prevBtn")
+            var button2 = document.getElementById("nextBtn")
+            var button1r = document.getElementById("prevBtnr")
+            var button2r = document.getElementById("nextBtnr")
+            list1.classList.add("hidden");
+            button1.classList.add("hidden")
+            button2.classList.add("hidden")
+            list2.classList.remove("hidden");
+            button1r.classList.remove("hidden")
+            button2r.classList.remove("hidden")
+        }
+    </script>
+
+    <script>
+        function get(method,path){
+          return new Promise((resolve,reject)=>{
+            let xhr = new XMLHttpRequest()
+          xhr.open(method,`https://www.ksjzs.com:8000/${path}`)
+          xhr.send()
+          xhr.onreadystatechange = () =>{
+            if(xhr.readyState=== 4){
+              if(xhr.status===200){
+                resolve(JSON.parse(xhr.response))
+              }
+            }
+          }
+          })
+         
+        }
+      window.addEventListener('load', async()=>{
+        let result = await get('GET','getHouses')
+        console.log(result)
+        let pageSize = 10;
+    let currentPage = 1; 
+    let totalPages = Math.ceil(result.length / pageSize);
+   
+    function displayResults() {
+        const listContainer = document.getElementById('apartment-list');
+        listContainer.innerHTML = ''; 
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+
+        for (let i = start; i < end; i++) {
+            if (i < result.length) {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                <h3>${result[i].title}</h3>        <p>Available Time: ${result[i].available_time}</p>
+        <p>Bathroom: ${result[i].bathroom}</p>        <p>Bedroom: ${result[i].bedroom}</p>
+        <p>Price: ${result[i].price}</p>        <p>Space: ${result[i].space} sqft</p>
+        <p>Location: ${result[i].location}</p>        <a href="${result[i].link}">More Details</a>
+   `;
+                listContainer.appendChild(listItem);
+            }
+        }
+    }
+
+    function prevPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            displayResults();
+        }
+    }
+
+    function nextPage() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            displayResults();
+        }
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', prevPage);
+    document.getElementById('nextBtn').addEventListener('click', nextPage);
+
+    displayResults();
+        
+let resultr = await get('GET','getRTHouses')
+console.log(resultr)
+let pageSizer = 10; 
+    let currentPager = 1;
+    let totalPagesr = Math.ceil(resultr.length / pageSizer);
+   function displayResultsr() {
+    const listContainer = document.getElementById('apartment-list1');
+    listContainer.innerHTML = '';
+
+    const startr = (currentPager - 1) * pageSizer;
+    const endr = startr + pageSizer;
+
+    for (let i = startr; i < endr; i++) {
+        if (i < resultr.length) {
+            const listItemr = document.createElement('li');
+            listItemr.classList.add('li1'); // 
+                listItemr.innerHTML = `
+                <h3>${resultr[i].Title}</h3>        <p>Air Conditioning: ${resultr[i].Air_Conditioning}</p>
+        <p>Appliances: ${resultr[i].Appliances}</p>        <p>Bedroom: ${resultr[i].Bedroom}</p> <p>Bathroom: ${resultr[i].Bathroom}</p>
+        <p>Furnished: ${resultr[i].Furnished}</p>        <p>Latitude: ${resultr[i].Latitude} sqft</p>
+        <p>Location: ${resultr[i].Location}</p>   <p>Longitude: ${resultr[i].Longitude}</p>   <p>Move In Date: ${resultr[i].Move_In_Date}</p>  <p>Parking: ${resultr[i].Parking_Included}</p>   <p>Personal Outdoor Space: ${resultr[i].Personal_Outdoor_Space}</p>  <p>Pet Friendly: ${resultr[i].Pet_Friendly}</p>  <p>Post Time: ${resultr[i].Post_Time}</p>  <p>Price: ${resultr[i].Price}</p>  <p>Price per square foot: ${resultr[i].Price_per_square_foot}</p>  <p>Size sqft: ${resultr[i].Size_sqft}</p>  <p>Smoking permitted: ${resultr[i].Smoking_Permitted}</p>  <p>Type: ${resultr[i].Type}</p>  <p>Utilities_Included: ${resultr[i].Utilities_Included}</p>  <p>WIFI and More: ${resultr[i].Wi_Fi_and_More}</p> <a href="${resultr[i].Website}">More Details</a>
+    `;
+                listContainer.appendChild(listItemr);
+            }
+        }
+    }
+       
+        function prevPager() {
+        if (currentPager > 1) {
+            currentPager--;
+            displayResultsr();
+        }
+    }
+
+    
+    function nextPager() {
+        if (currentPager < totalPagesr) {
+            currentPager++;
+            displayResultsr();
+        }
+    }
+
+ 
+    document.getElementById('prevBtnr').addEventListener('click', prevPager);
+    document.getElementById('nextBtnr').addEventListener('click', nextPager);
+
+ 
+    displayResultsr();
+});
+</script>
+<h2></h2>
+
+   <h3>Excel Download</h3>
+    <button onclick="downloadExcel()">On Construction</button>
+     <button onclick="downloadExcel1()">Available For Rent</button>
+<h2></h2>
+
+<h3>Price Prediction</h3>
+  <button onclick="location.href='prediction.html';">Prediction</button> 
+<h2></h2>
+
+
+<div class="analysis-section">
+    <h2>Data Analysis</h2>
+  <img src="./data.png" alt="CatBoost Feature Importance">
+  <p>
+    CatBoost Feature Importance
+  </p>
+
+  <img src="./data1.png" alt="Comparison graph between true value and predicted value">
+  <p>
+    Comparison graph between true value and predicted value
+  </p>
+
+  <img src="./data2.png" alt="Correlation Heatmap">
+  <p>
+    Correlation Heatmap
+  </p>
+</div>
+  <h3 id='b'>Made by Team KSJZS</h3>
+
+</html>
