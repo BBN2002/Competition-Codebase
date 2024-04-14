@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Input Form</title>
+    <script src="./vue.js"></script>
+    <script src="./axios.js"></script>
+     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        #app {
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #000;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: grid;
+            gap: 15px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button[type="submit"] {
+            background-color: #000;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #333;
+        }
+
+        h3 {
+            margin-top: 20px;
+            font-size: 24px;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <h2>Property Input Form</h2>
+    <form @submit.prevent="submitForm">
+        <p>1. Enter Latitude</p>
+        <label for="latitude">Latitude:</label>
+        <input type="text" id="latitude" v-model="formData.latitude"><br>
+
+        <p>2. Enter Longitude</p>
+        <label for="longitude">Longitude:</label>
+        <input type="text" id="longitude" v-model="formData.longitude"><br>
+
+        <p>3. Enter the Type of home ('Apartment' or 'House' or 'Condo' or 'Duplex/Triplex' or 'Basement' or 'Townhouse')</p>
+        <label for="Type">Type:</label>
+        <input type="text" id="Type" v-model="formData.Type"><br>
+    
+        <p>4. Enter the number of bedrooms</p>
+        <label for="bedroom">Bedroom:</label>
+        <input type="text" id="bedroom" v-model="formData.bedroom"><br>
+
+        <p>5. Enter the number of bathrooms</p>
+        <label for="bathroom">Bathroom:</label>
+        <input type="text" id="bathroom" v-model="formData.bathroom"><br>
+
+        <p>6. Is hydro included? (Yes/No)</p>
+        <label for="hydro">Hydro:</label>
+        <input type="text" id="hydro" v-model="formData.hydro"><br>
+
+        <p>7. Is heat included? (Yes/No)</p>
+        <label for="heat">Heat:</label>
+        <input type="text" id="heat" v-model="formData.heat"><br>
+
+        <p>8. Is water included? (Yes/No)</p>
+        <label for="water">Water:</label>
+        <input type="text" id="water" v-model="formData.water"><br>
+
+        <p>9. Enter Wi-Fi and more ('Not included' or 'Internet' or 'Cable / TV, Internet')</p>
+        <label for="wi_fi_and_more">Wi-Fi and More:</label>
+        <input type="text" id="wi_fi_and_more" v-model="formData.wi_fi_and_more"><br>
+
+        <p>10. Enter parking included (3+ all imputed as 3, range is 0-3)</p>
+        <label for="parking_included">Parking Included:</label>
+        <input type="text" id="parking_included" v-model="formData.parking_included"><br>
+
+        <p>11. Enter agreement type ('1 Year' or 'Month-to-month' or 'Not Available')</p>
+        <label for="agreement_type">Agreement Type:</label>
+        <input type="text" id="agreement_type" v-model="formData.agreement_type"><br>
+
+        <p>12. Enter 'NaN'</p>
+        <label for="move_in_date">Move-in Date:</label>
+        <input type="text" id="move_in_date" v-model="formData.move_in_date"><br>
+
+        <p>13. Enter pet friendly ('No' or 'Yes' or 'Limited')</p>
+        <label for="pet_friendly">Pet Friendly:</label>
+        <input type="text" id="pet_friendly" v-model="formData.pet_friendly"><br>
+
+        <p>14. Enter size in square feet</p>
+        <label for="size_sqft">Size (sqft):</label>
+        <input type="text" id="size_sqft" v-model="formData.size_sqft"><br>
+
+        <p>15. Enter furnished ('No' or 'Yes')</p>
+        <label for="furnished">Furnished:</label>
+        <input type="text" id="furnished" v-model="formData.furnished"><br>
+
+        <p>16. Is 'Laundry (In Unit)' included? (Yes/No)</p>
+        <label for="laundry_in_unit">Laundry in Unit:</label>
+        <input type="text" id="laundry_in_unit" v-model="formData.laundry_in_unit"><br>
+
+        <p>17. Is 'Laundry (In Building)' included? (Yes/No)</p>
+        <label for="laundry_in_building">Laundry in Building:</label>
+        <input type="text" id="laundry_in_building" v-model="formData.laundry_in_building"><br>
+
+        <p>18. Is 'Dishwasher' included? (Yes/No)</p>
+        <label for="dishwasher">Dishwasher:</label>
+        <input type="text" id="dishwasher" v-model="formData.dishwasher"><br>
+
+        <p>19. Enter air conditioning ('No' or 'Yes')</p>
+        <label for="air_conditioning">Air Conditioning:</label>
+        <input type="text" id="air_conditioning" v-model="formData.air_conditioning"><br>
+
+        <p>20. Enter personal outdoor space ('Balcony' or 'Yard' or 'Yard Balcony' or 'Not included')</p>
+        <label for="personal_outdoor_space">Personal Outdoor Space:</label>
+        <input type="text" id="personal_outdoor_space" v-model="formData.personal_outdoor_space"><br>
+
+        <p>21. Enter smoking permitted ('No' or 'Yes' or 'Outdoors only')</p>
+        <label for="smoking_permitted">Smoking Permitted:</label>
+        <input type="text" id="smoking_permitted" v-model="formData.smoking_permitted"><br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <div v-if="response">
+        <h3>Predicted Price: $ {{ response }}</h3>
+    </div>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            formData: {
+                latitude: '',
+                longitude: '',
+                Type: '',
+                bedroom: '',
+                bathroom: '',
+                hydro: '',
+                heat: '',
+                water: '',
+                wi_fi_and_more: '',
+                parking_included: '',
+                agreement_type: '',
+                move_in_date: '',
+                pet_friendly: '',
+                size_sqft: '',
+                furnished: '',
+                laundry_in_unit: '',
+                laundry_in_building: '',
+                dishwasher: '',
+                air_conditioning: '',
+                personal_outdoor_space: '',
+                smoking_permitted: ''
+            },
+            response: null
+        },
+        methods: {
+            submitForm() {
+                const url = 'https://www.ksjzs.com:5000/predict_price';
+                axios.post(url, this.formData)
+                    .then(response => {
+                        console.log(response.data);
+                        this.response = response.data;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
